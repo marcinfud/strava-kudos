@@ -23,7 +23,10 @@ def run():
     try:
         r = requests.get(url, headers=headers, timeout=15)
         # Szukamy ID aktywności w kodzie strony
-        ids = re.findall(r'activity/(\d{10,12})', r.text)
+        ids = re.findall(r'activity/(\d+)', r.text) + \
+              re.findall(r'data-activity-id="(\d+)"', r.text) + \
+              re.findall(r'id="activity-(\d+)"', r.text)
+        
         unique_ids = list(set(ids))
         
         print(f"Znaleziono {len(unique_ids)} aktywności.")
