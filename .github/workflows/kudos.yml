@@ -1,20 +1,20 @@
 name: Strava Auto Kudos
 on:
   schedule:
-    - cron: '0 * * * *'  # Uruchamiaj co pełną godzinę
-  workflow_dispatch:      # Pozwala Ci klikać przycisk "Run workflow" ręcznie
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   run-kudos:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install requests
         run: pip install requests
@@ -22,4 +22,5 @@ jobs:
       - name: Run script
         env:
           STRAVA_COOKIE: ${{ secrets.STRAVA_COOKIE }}
-        run: python kudos.py
+        # Poprawiona nazwa pliku:
+        run: python give_kudos.py
