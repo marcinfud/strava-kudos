@@ -1,30 +1,43 @@
-import requests
-import re
 import os
-
-SESSION_COOKIE = os.environ.get('STRAVA_COOKIE')
-
-headers = {
-    "Cookie": f"_strava4_session={SESSION_COOKIE}",
-    "User-Agent": "Strava/350.11 (iPhone; iOS 17.4.1; Scale/3.00)", # Udajemy iPhone'a
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-}
+import time
+from playwright.sync_api import sync_playwright
 
 def run():
-    # Używamy innego adresu - mobilnego dashboardu
-    url = "https://www.strava.com"
-    r = requests.get(url, headers=headers)
-    
-    # Szukamy ID w szerszym zakresie (same cyfry w kontekście aktywności)
-    ids = re.findall(r'activity/(\d{9,12})', r.text)
-    unique_ids = list(set(ids))
-    
-    if not unique_ids:
-        print("Nadal 0. Strava całkowicie blokuje ten dostęp.")
-        # Sprawdźmy czy w ogóle jesteśmy zalogowani w tej sesji
-        if "login" in r.url or "Log In" in r.text:
-            print("STATUS: Wylogowany. Ciasteczko wygasło!")
+    cookie_value = os.environ.get('STRAVA_COOKIE')
+    if not cookie_value:
+        print("Brak ciasteczka!")
         return
 
-    print(f"Sukces! Znaleziono {len(unique_ids)} ID aktywności przez widok mobilny.")
-    # ... tutaj reszta kodu z pętlą POST (tak jak wcześniej)
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context()
+        
+        # Wstrzykujemy ciasteczko sesji
+        context.add_cookies([{
+            'name': '_strava4_session',
+            'value': cookie_value,
+            'domain': 'www.strava.com',
+            'path': '/'
+        }])
+
+        page = context.new_page()
+        print("Otwieram Stravę...")
+        page.goto("https://www.strava.com", wait_until="networkidle")
+        
+        # Przewijamy kawałek, żeby załadować feed
+        page.mouse.wheel(0, 2000)
+        time.sleep(3)
+
+        # Szukamy nieklikniętych kciuków
+        buttons = page.query_selector_all('button[data-testid="kudos_button"]:has(svg[data-testid="unfilled_kudos"])')
+        print(f"Znaleziono {len(buttons)} nowych aktywności.")
+
+        for btn in buttons:
+            btn.click()
+            print("Kudos wysłany! 👍")
+            time.sleep(1)
+
+        browser.close()
+
+if __name__ == "__main__":
+    run()
