@@ -19,4 +19,4 @@ jobs:
       - name: Run script
         env:
           STRAVA_COOKIE: ${{ secrets.STRAVA_COOKIE }}
-        run: python give_kudos.py
+        run: python -u give_kudos.py
