@@ -2,7 +2,7 @@ name: Strava Auto Kudos Playwright
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0/20 5-22 * * *'
+    - cron: '0/21 5-22 * * *'
 
 
 jobs:
